@@ -1,4 +1,4 @@
-# Invoice Type Design Decision - LSP & DDD Perspective
+# Invoice Type Design Decision - DDD Perspective
 
 ## Decision Flow: Should You Create Separate Types?
 
