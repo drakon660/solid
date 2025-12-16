@@ -1,0 +1,298 @@
+================================================================================
+ABSTRACTION FUNCTION DEFINITION FROM LISKOV-WING PAPER
+================================================================================
+
+Source: "Behavioral Subtyping Using Invariants and Constraints"
+        Barbara H. Liskov and Jeannette M. Wing
+        CMU-CS-99-156, July 1999
+
+================================================================================
+BASIC DEFINITION
+================================================================================
+
+From page 4 (Section 2 - Motivation):
+
+"We need to relate the values of stacks to those of bags. This can be done by
+means of an abstraction function, like that used for proving the correctness
+of implementations [Hoa72]. A given stack value maps to a bag value where we
+abstract from the insertion order on the elements."
+
+The abstraction function is a mathematical function that maps values from the
+subtype's value space to the supertype's value space, allowing us to reason
+about subtype objects in terms of their supertype behavior.
+
+================================================================================
+FORMAL PROPERTIES
+================================================================================
+
+From page 10 (Section 5.2 - Definition of Subtype):
+
+The abstraction function A : S → T has the following properties:
+
+1. A may be PARTIAL
+   - It need not be defined for all values in S
+   - But it MUST be defined for all LEGAL values (those satisfying the
+     subtype invariant)
+
+2. A need not be ONTO
+   - Not every supertype value needs to have a corresponding subtype value
+
+3. A can be MANY-TO-ONE
+   - Multiple subtype values can map to the same supertype value
+
+4. DOMAIN REQUIREMENT:
+   "We require that an abstraction function be defined for all legal values
+   of the subtype (although it need not be defined for values that do not
+   satisfy the subtype invariant)."
+
+5. CODOMAIN REQUIREMENT:
+   "Moreover, it must map legal values of the subtype to legal values of the
+   supertype."
+
+   Formally: For all x : σ where I_σ holds, A(x) must satisfy I_τ
+
+================================================================================
+ROLE IN SUBTYPE DEFINITION
+================================================================================
+
+From Figure 4 (page 10):
+
+σ = ⟨O_σ, S, M⟩ is a subtype of τ = ⟨O_τ, T, N⟩ if there exists an
+abstraction function, A : S → T, and a renaming map, R : M → N, such that
+[various rules hold...]
+
+The abstraction function serves to:
+
+1. Translate subtype values into supertype values for comparison
+
+2. Enable verification of the methods rule:
+   - Pre-condition rule: m_τ.pre[A(x_pre)/x_pre] ⇒ m_σ.pre
+   - Post-condition rule: m_σ.post ⇒ m_τ.post[A(x_pre)/x_pre, A(x_post)/x_post]
+
+3. Enable verification of the invariant rule:
+   I_σ ⇒ I_τ[A(x_ρ)/x_ρ]
+
+4. Enable verification of the constraint rule:
+   C_σ ⇒ C_τ[A(x_ρ)/x_ρ, A(x_ψ)/x_ψ]
+
+Quote from page 11:
+"Note the role of the abstraction function in this proof. It allows us to
+relate stack and bag values, and therefore we can relate predicates about
+bag values to those about stack values and vice versa. Also, note how we
+depend on A being a function (in step (4) where we use the substitutivity
+property of equality)."
+
+================================================================================
+CONCRETE EXAMPLE: STACK TO BAG
+================================================================================
+
+From Figure 3 (page 9):
+
+Stack values: S = ⟨items, limit⟩ where items is a sequence, limit is a number
+Bag values:   B = ⟨elems, bound⟩ where elems is a multiset, bound is a number
+
+Abstraction function A : S → B:
+
+    ∀st : S : A(st) = ⟨mk_elems(st.items), st.limit⟩
+
+    where mk_elems : Seq → M
+          ∀i : Int; sq : Seq
+              mk_elems([]) = {}
+              mk_elems(sq || [i]) = mk_elems(sq) ∪ {i}
+
+EXPLANATION:
+- A stack's sequence of items maps to a bag's multiset by "forgetting" the order
+- The helping function mk_elems converts a sequence to a multiset
+- The stack's limit maps directly to the bag's bound
+- All elements in the sequence appear in the multiset, but order is lost
+
+This is a MANY-TO-ONE function because:
+- Stack [1, 2, 3] → Bag {1, 2, 3}
+- Stack [3, 2, 1] → Bag {1, 2, 3}  (same bag!)
+- Stack [2, 1, 3] → Bag {1, 2, 3}  (same bag!)
+
+Different stack orderings map to the same bag value.
+
+================================================================================
+USING THE ABSTRACTION FUNCTION IN PROOFS
+================================================================================
+
+From page 11 (Section 5.3 - Applying the Definition of Subtyping as a Checklist):
+
+Example: Proving push satisfies put's pre-condition rule
+
+We need to show:
+    | A(s_pre).elems | < A(s_pre).bound
+    ⇒ length(s_pre.items) < s_pre.limit
+
+Proof steps:
+
+1. "A maps the stack's sequence component to the bag's multiset by putting
+   all elements of the sequence into the multiset. Therefore the length of
+   the sequence s_pre.items is equal to the size of the multiset
+   A(s_pre).elems."
+
+2. "Also, A maps the limit of the stack to the bound of the bag so that
+   s_pre.limit = A(s_pre).bound."
+
+3. "From put's pre-condition we know | A(s_pre).elems | < A(s_pre).bound."
+
+4. "push's pre-condition holds by substituting equals for equals."
+
+The abstraction function enables this reasoning by providing the mapping
+between stack and bag values.
+
+================================================================================
+IMPORTANCE IN SUBTYPING PROOFS
+================================================================================
+
+From page 11:
+
+"Proofs of the subtype relation are usually obvious and can be done by
+inspection. Typically, the only interesting part is the definition of the
+abstraction function; the other parts of the proof are usually straightforward."
+
+The abstraction function is typically:
+- The most creative part of defining a subtype relation
+- The key insight that makes the subtype relationship work
+- Often obvious once you understand the relationship between the types
+
+Once A is defined correctly, the verification rules are mechanical.
+
+================================================================================
+TYPES OF ABSTRACTION FUNCTIONS
+================================================================================
+
+From page 12-13 (Section 6.1 - Extension Subtypes):
+
+1. ONE-TO-ONE (Bijective on legal values)
+   Example: intset2 (more methods, no extra state)
+   - Each subtype value maps to exactly one unique supertype value
+   - Subtype has more methods but same "information content"
+
+2. MANY-TO-ONE (Onto)
+   Example: triple to pair
+   - Multiple subtype values map to same supertype value
+   - Subtype has extra state that's invisible to supertype
+
+   Immutable triples:
+   - (0, 0, 0) → pair (0, 0)
+   - (0, 0, 1) → pair (0, 0)
+   - (0, 0, 2) → pair (0, 0)
+   All map to the same pair!
+
+3. MANY-TO-ONE (Into, not Onto)
+   Example: constrained subtypes like smallbag
+   - Some supertype values have no corresponding subtype values
+   - Subtype is more restricted than supertype
+
+   From Figure 8 (page 15):
+   - smallbag has bound = 20
+   - bag allows any bound
+   - A largebag with bound = 2^32 has no corresponding smallbag
+
+================================================================================
+EXTENSION SUBTYPES - ABSTRACTION FUNCTION CHARACTERISTICS
+================================================================================
+
+From page 12:
+
+"Abstraction functions for extension subtypes are onto, i.e., the range of
+the abstraction function is the set of all legal values of the supertype."
+
+Extension subtypes: The subtype extends the supertype by providing additional
+methods and possibly additional state.
+
+When onto:
+- Every legal supertype value has at least one corresponding subtype value
+- The subtype is "as expressive as" the supertype
+- May be one-to-one (same state) or many-to-one (extra state)
+
+================================================================================
+CONSTRAINED SUBTYPES - ABSTRACTION FUNCTION CHARACTERISTICS
+================================================================================
+
+From page 14:
+
+"The abstraction function is usually into rather than onto."
+
+Constrained subtypes: The subtype is more restricted than the supertype.
+
+When into (not onto):
+- Some supertype values have NO corresponding subtype values
+- The subtype represents a subset of supertype behaviors
+- The supertype must be designed with nondeterminism to allow variation
+
+Examples:
+- royal elephants (only blue) as subtype of elephants (blue, grey, or white)
+- smallbag (bound = 20) as subtype of bag (any bound)
+- 32-bit integers as subtype of integers (any size)
+
+================================================================================
+RELATIONSHIP TO IMPLEMENTATION ABSTRACTION FUNCTIONS
+================================================================================
+
+From page 4:
+
+The abstraction function concept comes from program verification, specifically
+from proving correctness of data structure implementations [Hoa72 - Hoare 1972].
+
+In implementation verification:
+- Abstraction function maps CONCRETE representation to ABSTRACT value
+- Example: A hash table implementation maps to an abstract set
+
+In subtyping:
+- Abstraction function maps SUBTYPE value to SUPERTYPE value
+- Example: A stack value maps to a bag value
+
+Both use the same mathematical concept but for different purposes:
+- Implementation: concrete → abstract (same type)
+- Subtyping: subtype → supertype (different types)
+
+================================================================================
+PRACTICAL GUIDELINES
+================================================================================
+
+When defining a subtype relationship:
+
+1. Start by identifying the abstraction function
+   - How do subtype values correspond to supertype values?
+   - What information is preserved? What is discarded?
+
+2. Verify the abstraction function properties:
+   - Defined for all legal subtype values (satisfying I_σ)
+   - Maps to legal supertype values (satisfying I_τ)
+
+3. Use the abstraction function to verify the rules:
+   - Invariant rule: I_σ ⇒ I_τ[A(x)/x]
+   - Constraint rule: C_σ ⇒ C_τ[A(x_ρ)/x_ρ, A(x_ψ)/x_ψ]
+   - Pre-condition rule: m_τ.pre[A(x_pre)/x_pre] ⇒ m_σ.pre
+   - Post-condition rule: m_σ.post ⇒ m_τ.post[A(x_pre)/x_pre, A(x_post)/x_post]
+
+4. Common patterns:
+   - Identity function (same value space)
+   - Projection (drop some components)
+   - Transformation (change representation, like sequence → multiset)
+
+================================================================================
+KEY INSIGHT
+================================================================================
+
+The abstraction function is the mathematical tool that enables behavioral
+substitutability. It allows us to:
+
+1. Compare values from different value spaces
+2. Verify that subtype operations preserve supertype properties
+3. Reason about subtype objects using supertype specifications
+
+Without the abstraction function, we cannot formally verify the Liskov
+Substitution Principle - we cannot prove that "properties provable about
+objects x of type T should hold for objects y of type S where S is a
+subtype of T."
+
+The abstraction function A makes this precise: properties proved about
+values v : T also hold for values A(w) where w : S.
+
+================================================================================
+END OF DOCUMENT
+================================================================================

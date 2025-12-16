@@ -1,0 +1,228 @@
+================================================================================
+CONSTRAINTS AND HISTORY PROPERTIES DEFINITION FROM LISKOV-WING PAPER
+================================================================================
+
+Source: "Behavioral Subtyping Using Invariants and Constraints"
+        Barbara H. Liskov and Jeannette M. Wing
+        CMU-CS-99-156, July 1999
+
+================================================================================
+HISTORY PROPERTIES - BASIC DEFINITION
+================================================================================
+
+From page 3:
+
+"We focus on two kinds of such properties: invariants, which are properties
+true of all states, and history properties, which are properties true of all
+sequences of states. We formulate invariants as predicates over single states
+and history properties, over pairs of states."
+
+History properties are properties that relate different states over time,
+capturing how objects evolve through sequences of operations.
+
+Examples given in the paper:
+- For a bag: "the bag's bound does not change"
+- For a fat set: "the fat set only grows in size"
+
+================================================================================
+CONSTRAINTS - DEFINITION
+================================================================================
+
+From page 7, section 4.4 "Type Specifications Need Explicit Constraints":
+
+The CONSTRAINT CLAUSE contains a two-state predicate that defines the type's
+history properties.
+
+To compensate for the lack of the history rule, we state history properties
+explicitly in the type specification through a constraint clause; if the
+constraint is trivial, the clause can be omitted.
+
+--------------------------------------------------------------------------------
+FORMAL DEFINITION
+--------------------------------------------------------------------------------
+
+The predicate φ(x_ρ, x_ψ) appearing in a constraint clause for type τ stands
+for the predicate:
+
+For all computations, c, and all states ρ and ψ in c such that ρ precedes ψ,
+
+    ∀x : τ . x ∈ dom(ρ) ⇒ φ(x_ρ, x_ψ)
+
+Note: We do not require that ψ be the immediate successor of ρ in c.
+
+This means: for every object x of type τ that exists in state ρ, the constraint
+property φ must hold between the value in state ρ and the value in any later
+state ψ.
+
+--------------------------------------------------------------------------------
+EXAMPLES OF CONSTRAINTS
+--------------------------------------------------------------------------------
+
+Example 1 - Bounded Bag (Figure 1, page 7):
+
+    constraint b_ρ.bound = b_ψ.bound
+
+This declares that a bag's bound never changes between any two states.
+
+
+Example 2 - Fat Set (page 7):
+
+    constraint ∀ i : int : i ∈ s_ρ ⇒ i ∈ s_ψ
+
+This states that once an integer is in the fat set, it remains in the fat set
+in all future states (the set only grows, never shrinks).
+
+
+Example 3 - Bounded Stack (Figure 3, page 11):
+
+    constraint s_ρ.limit = s_ψ.limit
+
+The stack's limit does not change between states.
+
+
+Example 4 - Counter (page 16):
+
+    constraint c_ρ ≤ c_ψ
+
+When a counter is advanced, we only know that its value gets bigger.
+
+
+Example 5 - Multiplier (subtype of counter, page 16):
+
+    constraint ∃ n : int : [ n > 0 ∧ c_ψ = n * c_ρ ]
+
+A multiplier's value always increases by a multiple.
+
+================================================================================
+WHY EXPLICIT CONSTRAINTS ARE NEEDED
+================================================================================
+
+From page 7-8:
+
+"We are interested in the history properties of objects in addition to their
+invariant properties. We can formulate history properties as predicates over
+state pairs, and prove them using the history rule."
+
+THE HISTORY RULE (cannot be used directly):
+--------------------------------------------------------------------------------
+For each of the i mutators m of τ, for all x : τ:
+
+    m_i.pre ∧ m_i.post ⇒ φ(x_ρ, x_ψ)
+
+WHY WE CANNOT USE THE HISTORY RULE:
+--------------------------------------------------------------------------------
+"We cannot use this history rule directly, however. It is incomplete since
+subtypes may define additional mutators. If we use it without considering the
+extra mutators, it is easy to prove properties that do not hold for subtype
+objects!"
+
+SOLUTION - EXPLICIT CONSTRAINTS:
+--------------------------------------------------------------------------------
+"To compensate for the lack of the history rule, we state history properties
+explicitly in the type specification through a constraint clause."
+
+By stating constraints explicitly:
+1. We don't need to know all mutators (including those added by subtypes)
+2. We can verify that subtypes preserve supertype constraints
+3. Properties hold even when subtypes add extra mutator methods
+
+================================================================================
+PROVING THAT METHODS SATISFY THE CONSTRAINT
+================================================================================
+
+From page 8:
+
+"Just as we had to prove that methods preserve the invariant, we must show
+that they satisfy the constraint. This is done by using the history rule for
+each mutator."
+
+For each mutator of the type, you verify:
+- The mutator's pre-condition and post-condition together imply the constraint
+
+This ensures the constraint holds across all state transitions caused by
+mutators.
+
+================================================================================
+SUBTYPING CONSTRAINT RULE
+================================================================================
+
+From the definition of the subtype relation (Figure 4, page 12):
+
+Constraint Rule: Subtype constraints ensure supertype constraints.
+
+    C_σ ⇒ C_τ[A(x_ρ)/x_ρ, A(x_ψ)/x_ψ]
+
+Where:
+- σ is the subtype
+- τ is the supertype
+- A is the abstraction function
+- C_σ is the subtype's constraint
+- C_τ is the supertype's constraint
+- ρ and ψ are states where ρ precedes ψ
+
+For all computations, c, and all states ρ and ψ in c such that ρ precedes ψ,
+for all x : σ, the subtype constraint must imply the supertype constraint
+(under the abstraction function).
+
+This ensures that any history property that can be proved about supertype
+objects will also hold for subtype objects.
+
+================================================================================
+KEY DIFFERENCES: INVARIANTS VS CONSTRAINTS
+================================================================================
+
+INVARIANTS:
+- Single-state predicates
+- Properties true in ALL states
+- Example: | b.elems | ≤ b.bound
+
+CONSTRAINTS:
+- Two-state predicates
+- Properties true across ALL pairs of states (where first precedes second)
+- Example: b_ρ.bound = b_ψ.bound
+
+Both are needed because:
+- Invariants cannot express how objects change over time
+- Constraints cannot express properties that must hold in a single state
+
+================================================================================
+PRACTICAL CONSEQUENCE
+================================================================================
+
+From page 8:
+
+"The loss of the history rule is analogous to the loss of a data type
+induction rule. A practical consequence of not having a history rule is that
+the specifier must make the constraint strong enough so that all desired
+history properties follow from it."
+
+The specifier must carefully design the constraint to capture all important
+temporal properties of the type, because additional history properties cannot
+be proved - they must follow from the stated constraint.
+
+================================================================================
+EXAMPLE: BAG AND STACK SUBTYPING
+================================================================================
+
+From page 11-12:
+
+Stack is a subtype of bag. Both have identical constraints:
+
+Bag constraint:     b_ρ.bound = b_ψ.bound
+Stack constraint:   s_ρ.limit = s_ψ.limit
+
+Under the abstraction function A, stack's limit maps to bag's bound, so:
+
+    s_ρ.limit = s_ψ.limit
+    ⇒ A(s_ρ).bound = A(s_ψ).bound
+
+The stack constraint implies the bag constraint, satisfying the subtyping
+constraint rule.
+
+This allows the swap_top method (which changes stack contents but not the
+limit) to be added to stack without violating the subtype relationship -
+even though bag has no such method, swap_top preserves the constraint.
+
+================================================================================
+END OF DOCUMENT
+================================================================================

@@ -1,0 +1,97 @@
+================================================================================
+INVARIANT DEFINITION FROM LISKOV-WING PAPER
+================================================================================
+
+Source: "Behavioral Subtyping Using Invariants and Constraints"
+        Barbara H. Liskov and Jeannette M. Wing
+        CMU-CS-99-156, July 1999
+
+================================================================================
+DEFINITION OF INVARIANT
+================================================================================
+
+Invariants are "properties true of all states" (page 3)
+
+The invariant clause contains a single-state predicate that defines the type's
+invariant properties.
+
+--------------------------------------------------------------------------------
+FORMAL DEFINITION
+--------------------------------------------------------------------------------
+
+The predicate φ(x) appearing in an invariant clause for type τ stands for the
+predicate: For all computations, c, and all states ρ in c,
+
+    ∀x : τ . x ∈ dom(ρ) ⇒ φ(x_ρ)
+
+This means: for every object x of type τ that exists in state ρ, the invariant
+property φ must hold.
+
+--------------------------------------------------------------------------------
+EXAMPLE - BOUNDED BAG
+--------------------------------------------------------------------------------
+
+From the bag type specification (Figure 1, page 6-7):
+
+    invariant | b.elems | ≤ b.bound
+
+This states that the size of a bounded bag never exceeds its bound - this
+property must be true in all states throughout the object's lifetime.
+
+--------------------------------------------------------------------------------
+KEY PROPERTIES
+--------------------------------------------------------------------------------
+
+1. Invariants define the LEGAL VALUES of a type
+
+2. They must hold in EVERY STATE of a computation
+
+3. All creators must ESTABLISH the invariant:
+   - For each creator for type τ, show for all x : τ that I_τ[result_post/x]
+
+4. All mutators must PRESERVE the invariant:
+   - For each mutator m of τ, for all x : τ assume I_τ[x_pre/x] and
+     show I_τ[x_post/x]
+
+5. Invariants are explicitly stated in type specifications because the
+   data type induction rule cannot be used when dealing with subtypes that
+   may add mutators
+
+--------------------------------------------------------------------------------
+WHY EXPLICIT INVARIANTS ARE NEEDED
+--------------------------------------------------------------------------------
+
+From page 8:
+
+"By not including creators in type specifications and by allowing subtypes to
+extend supertypes with mutators we lose a powerful reasoning tool: data type
+induction."
+
+"To compensate for the lack of a data type induction rule, we state the
+invariant explicitly in the type specification through an invariant clause;
+if the invariant is trivial (i.e., identical to 'true'), the clause can be
+omitted."
+
+--------------------------------------------------------------------------------
+SUBTYPING INVARIANT RULE
+--------------------------------------------------------------------------------
+
+From the definition of the subtype relation (Figure 4, page 12):
+
+Invariant Rule: Subtype invariants ensure supertype invariants.
+
+    I_σ ⇒ I_τ[A(x_ρ)/x_ρ]
+
+Where:
+- σ is the subtype
+- τ is the supertype
+- A is the abstraction function
+- I_σ is the subtype's invariant
+- I_τ is the supertype's invariant
+
+This ensures that any property that can be proved about supertype objects
+using the invariant will also hold for subtype objects.
+
+================================================================================
+END OF DOCUMENT
+================================================================================

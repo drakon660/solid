@@ -1,0 +1,155 @@
+AP vs AR — what they actually mean
+AR — Accounts Receivable
+
+Money that others owe you
+
+You issue invoices to customers.
+
+Typical characteristics:
+
+You create the invoice
+
+You send it to a customer
+
+You wait for payment
+
+PO is optional and usually just a reference
+
+Simpler lifecycle
+
+Examples:
+
+Sales invoice
+
+Customer invoice
+
+Subscription invoice
+
+👉 Invoice is the core aggregate
+
+AP — Accounts Payable
+
+Money that you owe others
+
+You receive invoices from vendors.
+
+Typical characteristics:
+
+Vendor sends invoice to you
+
+Often must reference a Purchase Order
+
+Requires approval workflows
+
+Matching (2-way / 3-way)
+
+Compliance & audit rules
+
+Payment scheduling
+
+Examples:
+
+Vendor invoice
+
+Supplier invoice
+
+PO invoice
+
+👉 Much more complex domain
+
+Why this matters in DDD
+In AR
+
+PO is usually just metadata
+
+InvoiceWithPO is not a different concept
+
+Same aggregate, same repository
+
+Invoice
+ └── optional PurchaseOrderReference
+
+
+Single collection
+
+In AP
+
+The business usually says things like:
+
+“This invoice must have a PO”
+
+“This invoice cannot be paid until matched”
+
+“This invoice is blocked pending approval”
+
+Here:
+
+PO is not just data
+
+It drives behavior
+
+It affects lifecycle
+
+Now you often get:
+
+NonPoInvoice
+
+PoInvoice
+
+or VendorInvoice with explicit subtypes
+
+👉 These are different aggregates or aggregate variants with hard invariants
+
+Separate collections become reasonable
+
+Typical DDD modeling outcome
+AR context
+Bounded Context: Billing / Sales
+
+Aggregate: Invoice
+- may reference PurchaseOrderId
+- same lifecycle
+
+→ ONE collection
+
+AP context
+Bounded Context: AccountsPayable
+
+Aggregates:
+- PoInvoice
+- NonPoInvoice
+
+Different rules, different flows
+
+→ SEPARATE collections (often)
+
+Important DDD insight (many teams miss this)
+
+AP and AR should almost always be separate bounded contexts
+
+Even if:
+
+both use the word “Invoice”
+
+both store similar fields
+
+They mean different things.
+
+Sharing a table/collection between AP and AR is usually a design smell.
+
+Quick decision table
+Question	If YES →
+Is this AR (we invoice customers)?	Single Invoice
+Is this AP (vendors invoice us)?	Likely split
+PO changes lifecycle?	Separate aggregate
+Approval / matching required?	Separate aggregate
+Same language & rules?	Same collection
+Bottom line
+
+AR → Invoice (+ optional PO) → one collection
+
+AP → PO-driven behavior → separate aggregates, often separate collections
+
+AP ≠ AR, even if the schema looks similar
+
+If you want, tell me which side you’re modeling right now (AP or AR), and I’ll sketch a concrete aggregate + repository layout in DDD terms.
