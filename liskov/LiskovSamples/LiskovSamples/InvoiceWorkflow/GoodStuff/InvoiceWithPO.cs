@@ -1,6 +1,6 @@
 namespace LiskovSamples.InvoiceWorkflow.GoodStuff;
 
-public class PurchaseOrderInvoiceCompliant : IInvoiceDocument
+public class InvoiceWithPO : IInvoiceDocument
 {
     public string InvoiceNumber { get; private set; }
     public decimal Amount { get; private set; }
@@ -8,7 +8,7 @@ public class PurchaseOrderInvoiceCompliant : IInvoiceDocument
     public InvoiceState State { get; private set; }
     public PurchaseOrder PurchaseOrder { get; private set; }
 
-    public PurchaseOrderInvoiceCompliant(string invoiceNumber, decimal amount, DateTime invoiceDate,
+    public InvoiceWithPO(string invoiceNumber, decimal amount, DateTime invoiceDate,
         PurchaseOrder purchaseOrder)
     {
         InvoiceNumber = invoiceNumber;
@@ -56,8 +56,6 @@ public class PurchaseOrderInvoiceCompliant : IInvoiceDocument
     
     public PaymentTerms GetPaymentTerms()
     {
-        // PO has pre-negotiated terms: 3/15 net 60 from PO approval date
-        // Different from standard invoice, but EXPLICIT - not hidden in calculation
         return new PaymentTerms(
             PurchaseOrder.ApprovedDate.AddDays(60),
             PurchaseOrder.ApprovedDate.AddDays(15),

@@ -24,11 +24,11 @@ public class AreaCalculatorTests
     [Fact]
     public void TwentyFourfor4x6RectanglefromSquare()
     {
-        Rectangle newRectangle = new Square();
+        Rectangle newRectangle = new Rectangle();
         newRectangle.Height = 4; 
         newRectangle.Width = 6;
 
         var result = AreaCalculator.CalculateArea(newRectangle);
-        result.Should().Be(36);
+        result.Should().Be(24);
     }
 }

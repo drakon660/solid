@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using LiskovSamples.InvoiceWorkflow;
 using LiskovSamples.InvoiceWorkflow.GoodStuff;
+using InvoiceWithPO = LiskovSamples.InvoiceWorkflow.GoodStuff.InvoiceWithPO;
 
 namespace LiskovSamples.Tests;
 
@@ -10,7 +11,7 @@ public class InvoiceTests
     public void PurchaseOrderInvoice_ViolatesLSP_ThrowsExceptionWhenAmountMismatch()
     {
         var po = new PurchaseOrder("PO-12345", 10000m, "Acme Corp", DateTime.Today.AddDays(-5));
-        var invoiceWithPO = new InvoiceWithPO("INV-PO-002", 15000m, DateTime.Today);
+        var invoiceWithPO = new InvoiceWorkflow.InvoiceWithPO("INV-PO-002", 15000m, DateTime.Today);
         invoiceWithPO.SetPurchaseOrder(po);
 
         Invoice invoice = invoiceWithPO;
@@ -26,7 +27,7 @@ public class InvoiceTests
     {
         var po = new PurchaseOrder("PO-12345", 10000m, "Acme Corp", DateTime.Today.AddDays(-5));
 
-        var poInvoice = new InvoiceWithPO("INV-PO-003", 15000m, DateTime.Today);
+        var poInvoice = new InvoiceWorkflow.InvoiceWithPO("INV-PO-003", 15000m, DateTime.Today);
         poInvoice.SetPurchaseOrder(po);
 
         var invoices = new List<Invoice>
@@ -50,7 +51,7 @@ public class InvoiceTests
         var invoiceDate = new DateTime(2025, 1, 15);
 
         var po = new PurchaseOrder("PO-12345", 10000m, "Acme Corp", poApprovalDate);
-        var invoiceWithPo = new InvoiceWithPO("INV-PO-001", 10000m, invoiceDate);
+        var invoiceWithPo = new InvoiceWorkflow.InvoiceWithPO("INV-PO-001", 10000m, invoiceDate);
         invoiceWithPo.SetPurchaseOrder(po);
 
         Invoice invoice = invoiceWithPo;
@@ -68,7 +69,7 @@ public class InvoiceTests
         var poApprovalDate = new DateTime(2025, 1, 1);
         var invoiceDate = new DateTime(2025, 1, 15);
         var po = new PurchaseOrder("PO-12345", 10000m, "Acme Corp", poApprovalDate);
-        var invoiceWithPO = new InvoiceWithPO("INV-PO-001", 10000m, invoiceDate);
+        var invoiceWithPO = new InvoiceWorkflow.InvoiceWithPO("INV-PO-001", 10000m, invoiceDate);
         invoiceWithPO.SetPurchaseOrder(po);
 
         Invoice invoice = invoiceWithPO;
@@ -90,7 +91,7 @@ public class InvoiceTests
         var invoiceDate = new DateTime(2025, 1, 15);
         var po = new PurchaseOrder("PO-12345", 10000m, "Acme Corp", poApprovalDate);
 
-        var poInvoice = new InvoiceWithPO("INV-PO-003", 10000m, invoiceDate);
+        var poInvoice = new InvoiceWorkflow.InvoiceWithPO("INV-PO-003", 10000m, invoiceDate);
         poInvoice.SetPurchaseOrder(po);
 
         var invoices = new List<Invoice>
@@ -120,7 +121,7 @@ public class InvoiceTests
         var invoiceDate = new DateTime(2025, 1, 15);
         var po = new PurchaseOrder("PO-12345", 5000m, "Acme Corp", poApprovalDate);
 
-        var poInvoice = new InvoiceWithPO("INV-PO-003", 5000m, invoiceDate);
+        var poInvoice = new InvoiceWorkflow.InvoiceWithPO("INV-PO-003", 5000m, invoiceDate);
         poInvoice.SetPurchaseOrder(po);
 
         var invoices = new List<Invoice>
@@ -151,7 +152,7 @@ public class InvoiceTests
     public void PurchaseOrderInvoiceCompliant_ReturnsErrorWhenAmountMismatch()
     {
         var po = new PurchaseOrder("PO-12345", 10000m, "Acme Corp", DateTime.Today.AddDays(-5));
-        var invoice = new PurchaseOrderInvoiceCompliant("INV-PO-002", 15000m, DateTime.Today, po);
+        var invoice = new InvoiceWithPO("INV-PO-002", 15000m, DateTime.Today, po);
 
         invoice.SubmitForApproval().Success.Should().BeTrue();
 
@@ -180,7 +181,7 @@ public class InvoiceTests
         IInvoiceDocument standard = new StandardInvoice("INV-001", 1000m, DateTime.Today);
 
         var po = new PurchaseOrder("PO-12345", 5000m, "Acme Corp", DateTime.Today.AddDays(-5));
-        IInvoiceDocument poInvoice = new PurchaseOrderInvoiceCompliant("INV-PO-002", 5000m, DateTime.Today, po);
+        IInvoiceDocument poInvoice = new InvoiceWithPO("INV-PO-002", 5000m, DateTime.Today, po);
 
         // Same client code works with all implementations
         var result1 = InvoiceService.ApproveInvoiceCorrect(standard);
@@ -200,7 +201,7 @@ public class InvoiceTests
         {
             new StandardInvoice("INV-001", 1000m, DateTime.Today),
             new StandardInvoice("INV-002", 2000m, DateTime.Today),
-            new PurchaseOrderInvoiceCompliant("INV-PO-003", 15000m, DateTime.Today, po), // Amount mismatch - will fail
+            new InvoiceWithPO("INV-PO-003", 15000m, DateTime.Today, po), // Amount mismatch - will fail
             new StandardInvoice("INV-004", 3000m, DateTime.Today)
         };
 
@@ -228,9 +229,9 @@ public class InvoiceTests
         var po2 = new PurchaseOrder("PO-67890", 10000m, "Widgets Inc", DateTime.Today.AddDays(-3));
         var po3 = new PurchaseOrder("PO-99999", 3000m, "Tools Ltd", DateTime.Today.AddDays(-7));
 
-        var matchingInvoice = new PurchaseOrderInvoiceCompliant("INV-PO-001", 5000m, DateTime.Today, po1);
-        var mismatchInvoice1 = new PurchaseOrderInvoiceCompliant("INV-PO-002", 15000m, DateTime.Today, po2);
-        var mismatchInvoice2 = new PurchaseOrderInvoiceCompliant("INV-PO-003", 12000m, DateTime.Today, po3);
+        var matchingInvoice = new InvoiceWithPO("INV-PO-001", 5000m, DateTime.Today, po1);
+        var mismatchInvoice1 = new InvoiceWithPO("INV-PO-002", 15000m, DateTime.Today, po2);
+        var mismatchInvoice2 = new InvoiceWithPO("INV-PO-003", 12000m, DateTime.Today, po3);
 
         var invoices = new List<IInvoiceDocument>
         {
@@ -272,7 +273,7 @@ public class InvoiceTests
         {
             new StandardInvoice("INV-001", 1000m, invoiceDate),
             new StandardInvoice("INV-002", 2000m, invoiceDate),
-            new PurchaseOrderInvoiceCompliant("INV-PO-003", 10000m, invoiceDate, po)
+            new InvoiceWithPO("INV-PO-003", 10000m, invoiceDate, po)
         };
 
         var currentDate = new DateTime(2025, 2, 5);
@@ -314,7 +315,7 @@ public class InvoiceTests
         {
             new StandardInvoice("INV-001", 5000m, invoiceDate),
             new StandardInvoice("INV-002", 5000m, invoiceDate),
-            new PurchaseOrderInvoiceCompliant("INV-PO-003", 5000m, invoiceDate, po)
+            new InvoiceWithPO("INV-PO-003", 5000m, invoiceDate, po)
         };
 
         var paymentDate = new DateTime(2025, 1, 16);
@@ -353,7 +354,7 @@ public class InvoiceTests
         var invoices = new List<IInvoiceDocument>
         {
             new StandardInvoice("INV-001", 1000m, invoiceDate),
-            new PurchaseOrderInvoiceCompliant("INV-PO-002", 10000m, invoiceDate, po)
+            new InvoiceWithPO("INV-PO-002", 10000m, invoiceDate, po)
         };
 
         var currentDate = new DateTime(2025, 1, 20);
