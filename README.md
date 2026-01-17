@@ -7,7 +7,7 @@ This repository contains only the Liskov Substitution Principle (LSP) from the S
 The `Documents` folder contains 3 original papers:
 
 - Barbara Liskov - "Data Abstraction and Hierarchy" (OOPSLA)
-- 2 documents by Jeannette Wing
+- 2 documents by Barabara Liskov and Jeannette Wing
 
 ## LiskovSamples
 
